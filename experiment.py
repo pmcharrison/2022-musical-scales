@@ -9,7 +9,7 @@ from flask import Markup
 import psynet.experiment
 from psynet.asset import DebugStorage
 from psynet.consent import MainConsent, NoConsent
-from psynet.modular_page import PushButtonControl, AudioRecordControl
+from psynet.modular_page import PushButtonControl, AudioRecordControl, SurveyJSControl
 from psynet.page import InfoPage, SuccessfulEndPage, ModularPage
 from psynet.timeline import Timeline, Module, CodeBlock, Event, ProgressDisplay, ProgressStage
 from psynet.trial.static import StaticTrial, StaticNode, StaticTrialMaker
@@ -17,180 +17,97 @@ from psynet.utils import get_logger
 
 from psynet.js_synth import JSSynth, Chord, InstrumentTimbre
 
-import singing_extract as singing
+from .stimuli import load_scales, load_melodies
 
 logger = get_logger()
 
 
-with open("chord_types.json") as file:
-    NODES = [
-        StaticNode(
-            definition={
-                "chord_type": chord_type,
-                "timbre_type": timbre_type,
-            },
-        )
-        for chord_type in json.load(file)
-        for timbre_type in ["same", "different"]
-    ]
+SCALES = load_scales("scales.tsv")
+MELODIES = load_melodies("melodies")
 
-AVAILABLE_TIMBRES = [
-    "piano",
-    "flute",
-    "trumpet",
-    "saxophone",
+ATTRIBUTES = [
+    "Happiness, elation",
+    "Sadness, melancholy",
+    "Surprise, astonishment",
+    "Calm, contentment",
+    "Anger, irritation",
+    "Nostalgia, longing",
+    "Interest, expectancy",
+    "Anxiety, nervousness",
+    "Love, tenderness",
+    "Disgust, contempt",
+    "Spirituality, transcendence",
+    "Admiration, awe",
+    "Enjoyment, pleasure",
+    "Pride, confidence"
 ]
 
-VOCAL_RANGES = {
-    "Soprano": 69,
-    "Alto": 65,
-    "Tenor": 57,
-    "Bass": 52,
-}
-
-singing_analysis_config = {
-    # This needs to be populated with reference to
-    # - https://gitlab.com/computational-audition-lab/sing4me/-/blob/master/sing_experiments/params.py
-    # and
-    # - https://gitlab.com/computational-audition-lab/sing4me/-/blob/master/sing4me/singing_extract.py
-}
+N_ATTRIBUTES_PER_TRIAL = 3
 
 
-class VerticalProcessingTrial(StaticTrial):
-    time_estimate = 5
+NODES = [
+    StaticNode(
+        definition={
+            "scale_name": scale_name,
+            "melody_name": melody_name,
+        },
+    )
+    for scale_name in SCALES.keys()
+    for melody_name in MELODIES.keys()
+]
+
+
+class MelodyTrial(StaticTrial):
+    time_estimate = 10
+
+    @property
+    def melody(self):
+        return MELODIES[self.definition["melody_name"]]
 
     def finalize_definition(self, definition, experiment, participant):
-        n_pitches = len(definition["chord_type"])
-        definition["chord_duration"] = 3.5  # How long is the chord? (seconds)
-        definition["roving_radius"] = 1.0  # The centre pitch of the chord roves +/- this value in semitones
-        definition["silence_duration"] = 0.5  # How long do we wait between the chord and the recording?
-        definition["record_duration"] = 1.0 + n_pitches * 1.25  # How long is the recording?
-
-        # definition["timbre"] = ["piano" for _ in definition["chord_type"]]
-
-        if definition["timbre_type"] == ["same"]:
-            _timbre = random.choice(AVAILABLE_TIMBRES, k=1)
-            definition["timbre"] = [_timbre for _ in n_pitches]
-        else:
-            definition["timbre"] = random.sample(AVAILABLE_TIMBRES, k=n_pitches)
-
-        mean_target_pitch = random.uniform(
-            participant.var.vocal_centre - self.definition["roving_radius"],
-            participant.var.vocal_centre + self.definition["roving_radius"]
-        )
-
-        mean_original_pitch = mean(definition["chord_type"])
-        pitch_translation = mean_target_pitch - mean_original_pitch
-        target_pitches = [p + pitch_translation for p in self.definition["chord_type"]]
-
-        definition["mean_target_pitch"] = mean_target_pitch
-        definition["target_pitches"] = target_pitches
+        definition["tempo"] = 100  # Todo - think about this
+        definition["n_beats"] = self.melody.total_n_beats
+        definition["duration_sec"] = definition["n_beats"] * 60 / definition["tempo"]
+        definition["transposition"] = 0.0
+        definition["attributes"] = random.sample(ATTRIBUTES, k=N_ATTRIBUTES_PER_TRIAL)
 
         return definition
 
     def show_trial(self, experiment, participant):
-        timbre_library = {
-            timbre_label: InstrumentTimbre(
-                type=timbre_label,
-            )
-            for timbre_label in self.definition["timbre"]
-        }
 
         return ModularPage(
-            "singing",
+            "rating",
             JSSynth(
-                "Sing back the notes in the chord in any order.",
-                [
-                    Chord(
-                        self.definition["target_pitches"],
-                        duration=self.definition["chord_duration"],
-                        timbre=self.definition["timbre"],
-                    ) 
-                ],
-                timbre=timbre_library,
+                "Listen to the melody and rate it on the following scales.",
+                self.melody.to_js_synth(
+                    tempo=self.definition["tempo"],
+                    transposition=self.definition["transposition"],
+                ),
+                timbre=InstrumentTimbre("piano"),
             ),
-            AudioRecordControl(
-                duration=self.definition["chord_duration"]
+            SurveyJSControl(
+                {
+                    "elements": [
+                        {
+                            "type": "rating",
+                            "name": attribute,
+                            "title": attribute,
+                            "isRequired": True,
+                            "minRateDescription": "Not at all",
+                            "maxRateDescription": "Very much so"
+                        }
+                        for attribute in self.definition["attributes"]
+                    ]
+                }
             ),
             events={
-                "recordStart": Event(
-                    is_triggered_by="promptEnd",
-                    delay= self.definition["silence_duration"]
-                )
+                "submitEnable": Event(is_triggered_by="promptEnd"),
             },
-            progress_display=ProgressDisplay(
-                stages=[
-                    ProgressStage(
-                        self.definition["chord_duration"],
-                        "Listen to the chord...",
-                        color="green",
-                    ),
-                    ProgressStage(
-                        self.definition["silence_duration"],
-                        "Wait a moment...",
-                        color="grey"
-                    ),
-                    ProgressStage(
-                        self.definition["record_duration"],
-                        "Sing back the chord!",
-                        color="red",
-                    ),
-                    ProgressStage(
-                        0.25,
-                        "Click 'Next' when you are ready to continue.",
-                        color="grey",
-                        persistent=True,
-                    )
-                ]
-            )
         )
-
-    wait_for_feedback = True
-
-    def async_post_trial(self):
-        with tempfile.NamedTemporaryFile() as f_audio, tempfile.NamedTemporaryFile() as f_plot:
-            self.assets["singing"].export(f_audio.name)
-            self.var.analysis = singing.analyze(
-                f_audio.name,
-                singing_analysis_config,
-                target_pitches=self.definition["target_pitches"],
-                plot_options=singing.PlotOptions(
-                    save=True,
-                    path=f_plot.name,
-                    format="png"
-                ),
-            )
-
-
-def get_voice_type():
-    return Module(
-        "get_voice_type",
-        ModularPage(
-            "get_voice_type",
-            "What voice type best describes you?",
-            PushButtonControl(
-                [
-                    "Soprano",
-                    "Alto",
-                    "Tenor",
-                    "Bass",
-                ]
-            ),
-            time_estimate=5,
-            save_answer="voice_type"
-        ),
-        CodeBlock(lambda participant: participant.var.set(
-                "vocal_centre",
-                VOCAL_RANGES[participant.var.voice_type],
-            )
-        )
-    )
 
 
 class Exp(psynet.experiment.Experiment):
-    label = "Vertical processing experiment"
-
-    asset_storage = DebugStorage()
+    label = "Musical scales experiment"
 
     timeline = Timeline(
         NoConsent(),
@@ -198,10 +115,9 @@ class Exp(psynet.experiment.Experiment):
             "Welcome to the experiment!",
             time_estimate=5,
         ),
-        get_voice_type(),
         StaticTrialMaker(
             id_="consonance_main_experiment",
-            trial_class=VerticalProcessingTrial,
+            trial_class=MelodyTrial,
             nodes=NODES,
             expected_trials_per_participant=len(NODES),
             max_trials_per_participant=len(NODES),
