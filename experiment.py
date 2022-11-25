@@ -133,7 +133,7 @@ class Exp(psynet.experiment.Experiment):
             time_estimate=5,
         ),
         StaticTrialMaker(
-            id_="consonance_main_experiment",
+            id_="main_experiment",
             trial_class=MelodyTrial,
             nodes=NODES,
             expected_trials_per_participant=len(NODES),
@@ -144,6 +144,7 @@ class Exp(psynet.experiment.Experiment):
             balance_across_nodes=False,
             target_n_participants=50,
         ),
+        # Q: repeat trials for performance incentive?
         SuccessfulEndPage(),
     )
 
