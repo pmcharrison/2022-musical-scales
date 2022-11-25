@@ -1,22 +1,14 @@
 # pylint: disable=unused-import,abstract-method,unused-argument
-import json
 import random
-import tempfile
-from statistics import mean
-
-from flask import Markup
 
 import psynet.experiment
-from psynet.asset import DebugStorage
-from psynet.consent import MainConsent, NoConsent
-from psynet.modular_page import PushButtonControl, AudioRecordControl, SurveyJSControl
+from psynet.consent import NoConsent
+from psynet.js_synth import JSSynth, InstrumentTimbre, Note
+from psynet.modular_page import SurveyJSControl
 from psynet.page import InfoPage, SuccessfulEndPage, ModularPage
-from psynet.timeline import Timeline, Module, CodeBlock, Event, ProgressDisplay, ProgressStage
+from psynet.timeline import Timeline, Event
 from psynet.trial.static import StaticTrial, StaticNode, StaticTrialMaker
 from psynet.utils import get_logger
-
-from psynet.js_synth import JSSynth, Chord, InstrumentTimbre
-
 from .stimuli import load_scales, load_melodies
 
 logger = get_logger()
@@ -25,7 +17,7 @@ logger = get_logger()
 SCALES = load_scales("scales.tsv")
 MELODIES = load_melodies("melodies")
 
-ATTRIBUTES = [
+RATING_ATTRIBUTES = [
     "Happiness, elation",
     "Sadness, melancholy",
     "Surprise, astonishment",
@@ -42,7 +34,7 @@ ATTRIBUTES = [
     "Pride, confidence"
 ]
 
-N_ATTRIBUTES_PER_TRIAL = 3
+N_RATING_ATTRIBUTES_PER_TRIAL = 3
 
 
 NODES = [
@@ -61,28 +53,48 @@ class MelodyTrial(StaticTrial):
     time_estimate = 10
 
     @property
-    def melody(self):
+    def base_melody(self):
         return MELODIES[self.definition["melody_name"]]
+
+    @property
+    def scale(self):
+        return SCALES[self.definition["scale_name"]]
 
     def finalize_definition(self, definition, experiment, participant):
         definition["tempo"] = 100  # Todo - think about this
-        definition["n_beats"] = self.melody.total_n_beats
-        definition["duration_sec"] = definition["n_beats"] * 60 / definition["tempo"]
-        definition["transposition"] = 0.0
-        definition["attributes"] = random.sample(ATTRIBUTES, k=N_ATTRIBUTES_PER_TRIAL)
+        definition["target_mean_pitch"] = random.uniform(67 - 1.5, 67 + 1.5)
+        definition["rating_attributes"] = random.sample(RATING_ATTRIBUTES, k=N_RATING_ATTRIBUTES_PER_TRIAL)
+
+        realized_melody = self.base_melody.realize(
+            tempo=definition["tempo"],
+            scale=self.scale,
+            target_mean_pitch=definition["target_mean_pitch"],
+        )
+
+        definition["realized_melody__pitches"] = realized_melody["pitches"]
+        definition["realized_melody__note_durations_sec"] = realized_melody["note_durations_sec"]
+        definition["realized_melody__total_duration_sec"] = realized_melody["total_note_durations_sec"]
+        definition["realized_melody__transposition"] = realized_melody["transposition"]
 
         return definition
 
     def show_trial(self, experiment, participant):
-
         return ModularPage(
             "rating",
             JSSynth(
-                "Listen to the melody and rate it on the following scales.",
-                self.melody.to_js_synth(
-                    tempo=self.definition["tempo"],
-                    transposition=self.definition["transposition"],
+                (
+                    "Listen to the melody and rate it on the following scales. "
+                    "If you want to hear it again, feel free to refresh the page. "
+                    f"Scale: {self.definition['scale_name']}, "
+                    f"target mean pitch: {self.definition['target_mean_pitch']:.2f}."
                 ),
+                [
+                    Note(pitch, duration=duration)
+                    for pitch, duration in zip(
+                        self.definition["realized_melody__pitches"],
+                        self.definition["realized_melody__note_durations_sec"]
+                    )
+                ],
                 timbre=InstrumentTimbre("piano"),
             ),
             SurveyJSControl(
@@ -96,7 +108,7 @@ class MelodyTrial(StaticTrial):
                             "minRateDescription": "Not at all",
                             "maxRateDescription": "Very much so"
                         }
-                        for attribute in self.definition["attributes"]
+                        for attribute in self.definition["rating_attributes"]
                     ]
                 }
             ),
@@ -108,6 +120,11 @@ class MelodyTrial(StaticTrial):
 
 class Exp(psynet.experiment.Experiment):
     label = "Musical scales experiment"
+
+    variables = {
+        "window_width": 1024,
+        "window_height": 1024,
+    }
 
     timeline = Timeline(
         NoConsent(),
