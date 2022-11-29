@@ -24,7 +24,7 @@ cd "~/Documents/My Project Folder"
 Now you should 'clone' the repository to this folder by writing a command like this:
 
 ```
-git clone git@github.com:pmcharrison/2022-vertical-processing-test.git
+git clone git@github.com:pmcharrison/2022-musical-scales.git
 ```
 
 If all goes well, the repository should be downloaded your local computer.
