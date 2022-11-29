@@ -84,9 +84,9 @@ class MelodyTrial(StaticTrial):
             JSSynth(
                 (
                     "Listen to the melody and rate it on the following scales. "
-                    "If you want to hear it again, feel free to refresh the page. "
-                    f"Scale: {self.definition['scale_name']}, "
-                    f"target mean pitch: {self.definition['target_mean_pitch']:.2f}."
+                    # "If you want to hear it again, feel free to refresh the page. "
+                    # f"Scale: {self.definition['scale_name']}, "
+                    # f"target mean pitch: {self.definition['target_mean_pitch']:.2f}."
                 ),
                 [
                     Note(pitch, duration=duration)
@@ -98,6 +98,7 @@ class MelodyTrial(StaticTrial):
                 timbre=InstrumentTimbre("piano"),
             ),
             SurveyJSControl(
+                # See https://surveyjs.io/create-free-survey
                 {
                     "elements": [
                         {
@@ -106,7 +107,7 @@ class MelodyTrial(StaticTrial):
                             "title": attribute,
                             "isRequired": True,
                             "minRateDescription": "Not at all",
-                            "maxRateDescription": "Very much so"
+                            "maxRateDescription": "Very much so",
                         }
                         for attribute in self.definition["rating_attributes"]
                     ]
@@ -116,6 +117,32 @@ class MelodyTrial(StaticTrial):
                 "submitEnable": Event(is_triggered_by="promptEnd"),
             },
         )
+
+
+def custom_gmsi():
+    # https://surveyjs.io/create-free-survey - export with JSON editor
+    return ModularPage(
+        "gmsi",
+        "Please fill out the following questions.",
+        control=SurveyJSControl(
+            {
+                "logoPosition": "right",
+                "pages": [
+                    {
+                        "name": "page1",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "name": "question1",
+                                "title": "What's your name?"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ),
+        time_estimate=60 * 5,
+    )
 
 
 class Exp(psynet.experiment.Experiment):
@@ -144,6 +171,7 @@ class Exp(psynet.experiment.Experiment):
             balance_across_nodes=False,
             target_n_participants=50,
         ),
+        custom_gmsi(),
         # Q: repeat trials for performance incentive?
         SuccessfulEndPage(),
     )
