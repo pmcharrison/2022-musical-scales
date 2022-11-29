@@ -84,7 +84,8 @@ bash debug.sh
 Wait for a while as the server spins up. Eventually, you should see a link after 'Experiment dashboard:'.
 Click on this link, it'll open in your browser. Click 'New participant' to try out the experiment.
 
-You can make certain changes to the experiment code (in particular user interface things)
+You can make certain changes to the experiment code in `experiment.py` 
+(in particular user interface things)
 and see the results without restarting the server -- simply save and refresh the page.
 If you're changing things in `finalize_definition`, you'll have to save and then go to the next trial.
 If you're changing things in the nodes' definitions, you'll need to stop the server (press control C) and start it 
