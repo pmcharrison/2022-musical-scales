@@ -78,7 +78,7 @@ Hint -- you might find that the option you need to select is called 'SVM mode'..
 In your terminal within PyCharm, run the following:
 
 ```
-bash debug.sh
+bash scripts/debug.sh
 ```
 
 Wait for a while as the server spins up. Eventually, you should see a link after 'Experiment dashboard:'.
