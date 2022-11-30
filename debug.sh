@@ -14,6 +14,7 @@ docker run \
   -v "${PWD}":/experiment \
   -v "${HOME}"/.dallingerconfig:/.dallingerconfig \
   -v "${HOME}"/psynet-debug-storage:/psynet-debug-storage \
+  -v "${HOME}"/psynet-exports:/psynet-exports \
   --network dallinger \
   -p 5000:5000 \
   -e FLASK_OPTIONS='-h 0.0.0.0' \
