@@ -1,7 +1,7 @@
 # Ensures that the script stops on errors
 set -euo pipefail
 
-. params.sh
+. scripts/params.sh
 
 export PSYNET_EDITABLE=1
 

@@ -1,4 +1,4 @@
-. params.sh
+. scripts/params.sh
 
 echo "Building the experiment's Docker image and tagging it $EXPERIMENT_IMAGE..."
 
