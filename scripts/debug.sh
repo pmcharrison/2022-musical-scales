@@ -1,3 +1,4 @@
+# Ensures that the script stops on errors
 set -euo pipefail
 
 . params.sh
@@ -6,7 +7,7 @@ set -euo pipefail
 
 # Note: any changes to this command should be propagated to terminal.sh
 docker run \
-  --name dallinger-terminal \
+  --name dallinger \
   --rm \
   -ti \
   -u $(id -u "${USER}"):$(id -g "${USER}") \
@@ -14,10 +15,12 @@ docker run \
   -v "${HOME}"/.dallingerconfig:/.dallingerconfig \
   -v "${HOME}"/psynet-debug-storage:/psynet-debug-storage \
   --network dallinger \
+  -p 5000:5000 \
+  -e FLASK_OPTIONS='-h 0.0.0.0' \
   -e REDIS_URL=redis://dallinger_redis:6379 \
   -e DATABASE_URL=postgresql://dallinger:dallinger@dallinger_postgres/dallinger \
+  -e PSYNET_EDITABLE="${PSYNET_EDITABLE:-}" \
+  -v "${PSYNET_LOCAL_PATH}":/PsyNet \
   "${EXPERIMENT_IMAGE}" \
-  /bin/bash
-
-#  -p 5000:5000 \
-#  -e FLASK_OPTIONS='-h 0.0.0.0' \
+  psynet debug \
+  | sed -e "s:/tmp/dallinger_develop/:${PWD}/:" -e "s:\"/PsyNet/":"\"${PSYNET_LOCAL_PATH}/:"
