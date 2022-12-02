@@ -1,9 +1,9 @@
 # Ensures that the script stops on errors
 set -euo pipefail
 
-. params.sh
-. services.sh
-. build.sh
+. scripts/params.sh
+. scripts/services.sh
+. scripts/build.sh
 
 # Note: any changes to this command should be propagated to terminal.sh
 docker run \
@@ -13,7 +13,8 @@ docker run \
   -u $(id -u "${USER}"):$(id -g "${USER}") \
   -v "${PWD}":/experiment \
   -v "${HOME}"/.dallingerconfig:/.dallingerconfig \
-  -v "${HOME}"/psynet-debug-storage:/psynet-debug-storage \
+  -v "$PSYNET_DEBUG_STORAGE":/psynet-debug-storage \
+  -v "$PSYNET_EXPORT_STORAGE":/psynet-exports \
   --network dallinger \
   -p 5000:5000 \
   -e FLASK_OPTIONS='-h 0.0.0.0' \
