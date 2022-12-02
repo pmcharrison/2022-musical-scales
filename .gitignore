@@ -18,3 +18,5 @@ static/debug_storage
 .idea
 
 __pycache__
+
+*.DS_Store
