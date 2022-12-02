@@ -10,4 +10,4 @@ if [ ! -d "$PSYNET_LOCAL_PATH"/psynet/trial ]; then
   exit 1
 fi
 
-. debug.sh
+. scripts/debug.sh

@@ -25,6 +25,9 @@ RUN if [[ "$PSYNET_EDITABLE" = 1 ]] ; then pip install -e /PsyNet ; fi
 
 WORKDIR /experiment
 
+COPY *prepare_docker_image.sh prepare_docker_image.sh
+RUN if test -f prepare_docker_image.sh ; then bash prepare_docker_image.sh ; fi
+
 COPY . /experiment
 
 ENV PORT=5000

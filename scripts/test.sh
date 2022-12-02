@@ -1,4 +1,3 @@
-# Ensures that the script stops on errors
 set -euo pipefail
 
 . scripts/params.sh
@@ -6,8 +5,6 @@ set -euo pipefail
 . scripts/build.sh
 
 # Note: any changes to this command should be propagated to terminal.sh
-echo "TODO: wrap error message here"
-docker stop container || true
 docker run \
   --name dallinger \
   --rm \
@@ -15,15 +12,16 @@ docker run \
   -u $(id -u "${USER}"):$(id -g "${USER}") \
   -v "${PWD}":/experiment \
   -v "${HOME}"/.dallingerconfig:/.dallingerconfig \
-  -v "$PSYNET_DEBUG_STORAGE":/psynet-debug-storage \
-  -v "$PSYNET_EXPORT_STORAGE":/psynet-exports \
+  -v "$PSYNET_DEBUG_STORAGE"/tests:/psynet-debug-storage \
+  -v "$PSYNET_EXPORT_STORAGE"/tests:/psynet-exports \
   --network dallinger \
-  -p 5000:5000 \
   -e FLASK_OPTIONS='-h 0.0.0.0' \
   -e REDIS_URL=redis://dallinger_redis:6379 \
   -e DATABASE_URL=postgresql://dallinger:dallinger@dallinger_postgres/dallinger \
   -e PSYNET_EDITABLE="${PSYNET_EDITABLE:-}" \
   -v "${PSYNET_LOCAL_PATH}":/PsyNet \
   "${EXPERIMENT_IMAGE}" \
-  psynet debug \
+  pytest -x -s test.py \
   | sed -e "s:/tmp/dallinger_develop/:${PWD}/:" -e "s:\"/PsyNet/":"\"${PSYNET_LOCAL_PATH}/:"
+
+#-p 5000:5000 \

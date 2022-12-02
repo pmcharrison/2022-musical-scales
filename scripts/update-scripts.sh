@@ -1,13 +1,8 @@
-# Ensures that the script stops on errors
 set -euo pipefail
 
 . scripts/params.sh
-. scripts/services.sh
 . scripts/build.sh
 
-# Note: any changes to this command should be propagated to terminal.sh
-echo "TODO: wrap error message here"
-docker stop container || true
 docker run \
   --name dallinger \
   --rm \
@@ -25,5 +20,5 @@ docker run \
   -e PSYNET_EDITABLE="${PSYNET_EDITABLE:-}" \
   -v "${PSYNET_LOCAL_PATH}":/PsyNet \
   "${EXPERIMENT_IMAGE}" \
-  psynet debug \
+  psynet update-scripts \
   | sed -e "s:/tmp/dallinger_develop/:${PWD}/:" -e "s:\"/PsyNet/":"\"${PSYNET_LOCAL_PATH}/:"
