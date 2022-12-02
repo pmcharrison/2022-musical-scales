@@ -1,5 +1,6 @@
 # pylint: disable=unused-import,abstract-method,unused-argument
 import random
+from flask import Markup
 
 import psynet.experiment
 from psynet.consent import NoConsent
@@ -624,21 +625,27 @@ class Exp(psynet.experiment.Experiment):
     timeline = Timeline(
         NoConsent(),
         InfoPage(
-            "Welcome to the experiment!",
+            Markup(
+                """
+                <h2>Welcome!</h2>
+                <p>Here's a paragraph.</p>
+                <p>Here's another paragraph.</p>
+                """
+            ),
             time_estimate=5,
         ),
-        # StaticTrialMaker(
-        #     id_="main_experiment",
-        #     trial_class=MelodyTrial,
-        #     nodes=NODES,
-        #     expected_trials_per_participant=len(NODES),
-        #     max_trials_per_participant=len(NODES),
-        #     recruit_mode="n_participants",
-        #     allow_repeated_nodes=False,
-        #     n_repeat_trials=0,
-        #     balance_across_nodes=False,
-        #     target_n_participants=50,
-        # ),
+        StaticTrialMaker(
+            id_="main_experiment",
+            trial_class=MelodyTrial,
+            nodes=NODES,
+            expected_trials_per_participant=len(NODES),
+            max_trials_per_participant=len(NODES),
+            recruit_mode="n_participants",
+            allow_repeated_nodes=False,
+            n_repeat_trials=0,
+            balance_across_nodes=False,
+            target_n_participants=50,
+        ),
         questionnaire(),
         # Q: repeat trials for performance incentive?
         SuccessfulEndPage(),
