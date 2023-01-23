@@ -10,6 +10,8 @@ from psynet.page import InfoPage, SuccessfulEndPage, ModularPage
 from psynet.timeline import Timeline, Event
 from psynet.trial.static import StaticTrial, StaticNode, StaticTrialMaker
 from psynet.utils import get_logger
+
+from .consent import cms_consent
 from .stimuli import load_scales, load_melodies
 
 logger = get_logger()
@@ -616,6 +618,7 @@ def questionnaire():
 
 class Exp(psynet.experiment.Experiment):
     label = "Musical scales experiment"
+    initial_recruitment_size = 1
 
     variables = {
         "window_width": 1024,
@@ -623,17 +626,7 @@ class Exp(psynet.experiment.Experiment):
     }
 
     timeline = Timeline(
-        NoConsent(),
-        InfoPage(
-            Markup(
-                """
-                <h2>Welcome!</h2>
-                <p>Here's a paragraph.</p>
-                <p>Here's another paragraph.</p>
-                """
-            ),
-            time_estimate=5,
-        ),
+        cms_consent,
         StaticTrialMaker(
             id_="main_experiment",
             trial_class=MelodyTrial,
@@ -650,9 +643,3 @@ class Exp(psynet.experiment.Experiment):
         # Q: repeat trials for performance incentive?
         SuccessfulEndPage(),
     )
-
-    def __init__(self, session=None):
-        super().__init__(session)
-        self.initial_recruitment_size = (
-            1
-        )
