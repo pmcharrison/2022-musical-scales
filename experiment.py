@@ -637,6 +637,8 @@ class Exp(psynet.experiment.Experiment):
 
     timeline = Timeline(
         cms_consent,
+        # volume calibration?
+        # headphone check?
         instructions,
         StaticTrialMaker(
             id_="main_experiment",
