@@ -633,6 +633,7 @@ class Exp(psynet.experiment.Experiment):
     variables = {
         "window_width": 1024,
         "window_height": 1024,
+        # TODO: set to pounds, not dollars
     }
 
     timeline = Timeline(
