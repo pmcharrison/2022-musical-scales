@@ -52,6 +52,16 @@ NODES = [
 ]
 
 
+instructions = InfoPage(
+    """
+    In this experiment you will listen to a series of melodies.
+    You will be asked to rate how well each melody matches a pair of words,
+    for example "Happiness, elation".
+    """,
+    time_estimate=5,
+)
+
+
 class MelodyTrial(StaticTrial):
     time_estimate = 10
 
@@ -154,31 +164,31 @@ def questionnaire():
                                 "choices": [
                                     "Still at School",
                                     {
-                                        "value": "2 At University",
+                                        "value": "At University",
                                         "text": "At University"
                                     },
                                     {
-                                        "value": "2 In Full-time employment",
+                                        "value": "In Full-time employment",
                                         "text": "In Full-time employment"
                                     },
                                     {
-                                        "value": "2 In Part-time employment",
+                                        "value": "In Part-time employment",
                                         "text": "In Part-time employment"
                                     },
                                     {
-                                        "value": "2 Self-employed",
+                                        "value": "Self-employed",
                                         "text": "Self-employed"
                                     },
                                     {
-                                        "value": "2 Homemaker/full time parent",
+                                        "value": "Homemaker/full time parent",
                                         "text": "Homemaker/full time parent"
                                     },
                                     {
-                                        "value": "2 Unemployed",
+                                        "value": "Unemployed",
                                         "text": "Unemployed"
                                     },
                                     {
-                                        "value": "2 Retired",
+                                        "value": "Retired",
                                         "text": "Retired"
                                     }
                                 ],
@@ -627,6 +637,7 @@ class Exp(psynet.experiment.Experiment):
 
     timeline = Timeline(
         cms_consent,
+        instructions,
         StaticTrialMaker(
             id_="main_experiment",
             trial_class=MelodyTrial,
