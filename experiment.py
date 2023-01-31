@@ -12,6 +12,7 @@ from psynet.trial.static import StaticTrial, StaticNode, StaticTrialMaker
 from psynet.utils import get_logger
 
 from .consent import cms_consent
+from .debrief import debriefing
 from .stimuli import load_scales, load_melodies
 
 logger = get_logger()
@@ -38,6 +39,7 @@ RATING_ATTRIBUTES = [
 ]
 
 N_RATING_ATTRIBUTES_PER_TRIAL = 3
+TRIALS_PER_PARTICIPANT = 50
 
 
 NODES = [
@@ -638,22 +640,23 @@ class Exp(psynet.experiment.Experiment):
 
     timeline = Timeline(
         cms_consent,
-        # volume calibration?
+        # volume calibration? random pitches (not in 12-tone or any scale)
         # headphone check?
         instructions,
         StaticTrialMaker(
             id_="main_experiment",
             trial_class=MelodyTrial,
             nodes=NODES,
-            expected_trials_per_participant=len(NODES),
-            max_trials_per_participant=len(NODES),
+            expected_trials_per_participant=TRIALS_PER_PARTICIPANT,
+            max_trials_per_participant=TRIALS_PER_PARTICIPANT,
             recruit_mode="n_participants",
             allow_repeated_nodes=False,
-            n_repeat_trials=0,
+            n_repeat_trials=5,
             balance_across_nodes=False,
             target_n_participants=50,
         ),
         questionnaire(),
-        # Q: repeat trials for performance incentive?
+        debriefing(),
+        # Q: repeat trials for performance incentive? TODO - add performance check logic and bonusing
         SuccessfulEndPage(),
     )
