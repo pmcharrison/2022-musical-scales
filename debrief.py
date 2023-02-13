@@ -33,9 +33,10 @@ with debriefing_html:
         """
     )
 
-debriefing = Module(
-    "debriefing",
-    join(
-        InfoPage(debriefing_html, time_estimate=20),
+def debriefing():
+    return Module(
+        "debriefing",
+        join(
+            InfoPage(debriefing_html, time_estimate=20),
+        )
     )
-)

@@ -141,7 +141,7 @@ with consent_form:
         """
     )
 
-cms_consent = Module(
+consent = Module(
     "consent",
     join(
         NoConsent(),

@@ -1,27 +1,33 @@
 # pylint: disable=unused-import,abstract-method,unused-argument
 import random
-from flask import Markup
+
+from dominate import tags
+from numpy import isnan
 
 import psynet.experiment
-from psynet.consent import NoConsent
 from psynet.js_synth import JSSynth, InstrumentTimbre, Note
 from psynet.modular_page import SurveyJSControl
 from psynet.page import InfoPage, SuccessfulEndPage, ModularPage
+from psynet.prescreen import HeadphoneTest
 from psynet.timeline import Timeline, Event
 from psynet.trial.static import StaticTrial, StaticNode, StaticTrialMaker
-from psynet.utils import get_logger
+from psynet.utils import get_logger, corr
 
-from .consent import cms_consent
+from .consent import consent
 from .debrief import debriefing
+from .instructions import instructions
+from .questionnaire import questionnaire, questionnaire_intro
 from .stimuli import load_scales, load_melodies
+from .volume_calibration import volume_calibration
 
 logger = get_logger()
 
+TIMBRE = InstrumentTimbre("piano")
 
-SCALES = load_scales("scales.tsv")
+SCALES = load_scales("scales.tsv")  # 10 in total
 MELODIES = load_melodies("melodies")
 
-RATING_ATTRIBUTES = [
+RATING_ATTRIBUTES = [  # 14 in total
     "Happiness, elation",
     "Sadness, melancholy",
     "Surprise, astonishment",
@@ -40,6 +46,11 @@ RATING_ATTRIBUTES = [
 
 N_RATING_ATTRIBUTES_PER_TRIAL = 3
 TRIALS_PER_PARTICIPANT = 50
+N_REPEAT_TRIALS = 5
+
+# For debugging
+# TRIALS_PER_PARTICIPANT = 8
+# N_REPEAT_TRIALS = 5
 
 
 NODES = [
@@ -54,18 +65,8 @@ NODES = [
 ]
 
 
-instructions = InfoPage(
-    """
-    In this experiment you will listen to a series of melodies.
-    You will be asked to rate how well each melody matches a pair of words,
-    for example "Happiness, elation".
-    """,
-    time_estimate=5,
-)
-
-
 class MelodyTrial(StaticTrial):
-    time_estimate = 10
+    time_estimate = 15
 
     @property
     def base_melody(self):
@@ -110,7 +111,7 @@ class MelodyTrial(StaticTrial):
                         self.definition["realized_melody__note_durations_sec"]
                     )
                 ],
-                timbre=InstrumentTimbre("piano"),
+                timbre=TIMBRE,
             ),
             SurveyJSControl(
                 # See https://surveyjs.io/create-free-survey
@@ -126,7 +127,11 @@ class MelodyTrial(StaticTrial):
                         }
                         for attribute in self.definition["rating_attributes"]
                     ]
-                }
+                },
+                bot_response={
+                    attribute: random.choice([0, 1, 2, 3, 4, 5])
+                    for attribute in self.definition["rating_attributes"]
+                },
             ),
             events={
                 "submitEnable": Event(is_triggered_by="promptEnd"),
@@ -134,498 +139,53 @@ class MelodyTrial(StaticTrial):
         )
 
 
-def questionnaire():
-    # https://surveyjs.io/create-free-survey - export with JSON editor
-    return ModularPage(
-        "questionnaire",
-        "Please fill out the following questions.",
-        control=SurveyJSControl(
-            {
-                "logoPosition": "right",
-                "pages": [
-                    {
-                        "name": "page1",
-                        "elements": [
-                            {
-                                "type": "text",
-                                "name": "age",
-                                "title": "Your age (years)",
-                                "isRequired": True
-                            },
-                            {
-                                "type": "text",
-                                "name": "gender",
-                                "title": "I identify my gender as _  (please specify).",
-                                "isRequired": True
-                            },
-                            {
-                                "type": "checkbox",
-                                "name": "occupation",
-                                "title": "Occupational status",
-                                "isRequired": True,
-                                "choices": [
-                                    "Still at School",
-                                    {
-                                        "value": "At University",
-                                        "text": "At University"
-                                    },
-                                    {
-                                        "value": "In Full-time employment",
-                                        "text": "In Full-time employment"
-                                    },
-                                    {
-                                        "value": "In Part-time employment",
-                                        "text": "In Part-time employment"
-                                    },
-                                    {
-                                        "value": "Self-employed",
-                                        "text": "Self-employed"
-                                    },
-                                    {
-                                        "value": "Homemaker/full time parent",
-                                        "text": "Homemaker/full time parent"
-                                    },
-                                    {
-                                        "value": "Unemployed",
-                                        "text": "Unemployed"
-                                    },
-                                    {
-                                        "value": "Retired",
-                                        "text": "Retired"
-                                    }
-                                ],
-                                "showOtherItem": True,
-                                "maxSelectedChoices": 1
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "MT_03",
-                                "title": "I have never been complimented for my talents as a musical performer",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree not disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "checkbox",
-                                "name": "MT_06",
-                                "title": "I can play _ musical instruments",
-                                "choices": [
-                                    {
-                                        "value": "item1",
-                                        "text": "0"
-                                    },
-                                    {
-                                        "value": "item2",
-                                        "text": "1"
-                                    },
-                                    {
-                                        "value": "item3",
-                                        "text": "2"
-                                    },
-                                    {
-                                        "value": "item4",
-                                        "text": "3"
-                                    },
-                                    {
-                                        "value": "item5",
-                                        "text": "4"
-                                    },
-                                    {
-                                        "value": "item6",
-                                        "text": "5"
-                                    },
-                                    {
-                                        "value": "item7",
-                                        "text": "6 or more"
-                                    }
-                                ],
-                                "maxSelectedChoices": 1
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "MT_07",
-                                "title": "I would not consider myself a musician",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "PA_08",
-                                "title": "When I sing, I have no idea whether I'm in tune or not",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "SA_03",
-                                "title": "I am able to hit the right notes when I sing along with a recording",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "SA_04",
-                                "title": "I am not able to sing in harmony when somebody is singing a familiar tune",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "EM_01",
-                                "title": "I sometimes choose music that can trigger shivers down my spine",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "EM_02",
-                                "title": "Pieces of music rarely evoke emotions for me",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "EM_03",
-                                "title": "I often pick certain music  to motivate or excite me",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "EM_04",
-                                "title": "I am able to identify what is special about a given musical piece",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "EM_05",
-                                "title": "I am able to talk about the emotions that a piece of music evokes for me",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "radiogroup",
-                                "name": "EM_06",
-                                "title": "Music can evoke my memories of past people and places",
-                                "choices": [
-                                    {
-                                        "value": 1,
-                                        "text": "completely disagree"
-                                    },
-                                    {
-                                        "value": 2,
-                                        "text": "strongly disagree"
-                                    },
-                                    {
-                                        "value": 3,
-                                        "text": "disagree"
-                                    },
-                                    {
-                                        "value": 4,
-                                        "text": "neither agree nor disagree"
-                                    },
-                                    {
-                                        "value": 5,
-                                        "text": "agree"
-                                    },
-                                    {
-                                        "value": 6,
-                                        "text": "strongly agree"
-                                    },
-                                    {
-                                        "value": 7,
-                                        "text": "completely agree"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        ),
-        time_estimate=60 * 5,
-        save_answer="questionnaire",
-    )
+class ScalesTrialMaker(StaticTrialMaker):
+    give_end_feedback_passed = False
+
+    def performance_check(
+        self, experiment, participant, participant_trials
+    ):
+        trials_by_id = {trial.id: trial for trial in participant_trials}
+
+        repeat_trials = [t for t in participant_trials if t.is_repeat_trial]
+        parent_trials = [trials_by_id[t.parent_trial_id] for t in repeat_trials]
+
+        repeat_trial_answers = []
+        parent_trial_answers = []
+
+        for repeat_trial, parent_trial in zip(repeat_trials, parent_trials):
+            assert repeat_trial.definition["rating_attributes"] == parent_trial.definition["rating_attributes"]
+            rating_attributes = repeat_trial.definition["rating_attributes"]
+
+            for attribute in rating_attributes:
+                repeat_trial_answers.append(int(repeat_trial.answer[attribute]))
+                parent_trial_answers.append(int(parent_trial.answer[attribute]))
+
+        consistency = corr(repeat_trial_answers, parent_trial_answers, method="spearman")
+        passed = True
+
+        if isnan(consistency):
+            consistency = None
+
+        logger.info(
+            "Performance check for participant %i: consistency = %.1f%%, passed = %s",
+            participant.id,
+            consistency * 100.0,
+            passed,
+        )
+
+        return {"score": consistency, "passed": passed}
+
+    def compute_bonus(self, score, passed):
+        max_bonus = 0.40
+
+        if score is None or score <= 0.0:
+            bonus = 0.0
+        else:
+            bonus = max_bonus * score
+
+        bonus = min(bonus, max_bonus)
+        return bonus
 
 
 class Exp(psynet.experiment.Experiment):
@@ -633,17 +193,33 @@ class Exp(psynet.experiment.Experiment):
     initial_recruitment_size = 1
 
     variables = {
+        "currency": "£",
+        "wage_per_hour": 10,
         "window_width": 1024,
         "window_height": 1024,
-        # TODO: set to pounds, not dollars
     }
 
     timeline = Timeline(
-        cms_consent,
-        # volume calibration? random pitches (not in 12-tone or any scale)
-        # headphone check?
-        instructions,
-        StaticTrialMaker(
+        consent,
+        InfoPage(
+            tags.div(
+                tags.p("This experiment requires you to wear headphones. Please ensure you have plugged yours in now."),
+                tags.p("The next page will play some test audio. Please turn down your volume before proceeding.")
+            ),
+            time_estimate=5,
+        ),
+        volume_calibration(mean_pitch=67, sd_pitch=5, timbre=TIMBRE),
+        InfoPage(
+            """
+            We will now perform a short listening test to verify that your audio is working properly.
+            This test will be difficult to pass unless you listen carefully over your headphones.
+            Press 'Next' when you are ready to start.
+            """,
+            time_estimate=5,
+        ),
+        HeadphoneTest(),
+        instructions(),
+        ScalesTrialMaker(
             id_="main_experiment",
             trial_class=MelodyTrial,
             nodes=NODES,
@@ -651,12 +227,13 @@ class Exp(psynet.experiment.Experiment):
             max_trials_per_participant=TRIALS_PER_PARTICIPANT,
             recruit_mode="n_participants",
             allow_repeated_nodes=False,
-            n_repeat_trials=5,
+            n_repeat_trials=N_REPEAT_TRIALS,
             balance_across_nodes=False,
             target_n_participants=50,
+            check_performance_at_end=True,
         ),
+        questionnaire_intro(),
         questionnaire(),
         debriefing(),
-        # Q: repeat trials for performance incentive? TODO - add performance check logic and bonusing
         SuccessfulEndPage(),
     )
