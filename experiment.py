@@ -66,7 +66,7 @@ NODES = [
 
 
 class MelodyTrial(StaticTrial):
-    time_estimate = 15
+    time_estimate = 12
 
     @property
     def base_melody(self):

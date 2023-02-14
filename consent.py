@@ -22,7 +22,7 @@ with information_sheet:
             """
             Music is a complex yet fascinating phenomenon that appears in all known cultures. As music psychologists, we
             want to understand the mental processes that underpin music listening and music creation. In this particular
-            experiment, we are studying how melodies can elicit different emotions."
+            experiment, we are studying how melodies can elicit different emotions.
             """
         )
 
@@ -50,7 +50,7 @@ with information_sheet:
         strong("Benefits of taking part.")
         span(
             """
-            Completing the entire experiment earns you a payment of approximately £3.33. This fee is calculated by
+            Completing the entire experiment earns you a payment of approximately £3.00. This fee is calculated by
             multiplying a notional hourly rate of £10.00/hour by the estimated duration of the experiment. However,
             please note the following:
             """

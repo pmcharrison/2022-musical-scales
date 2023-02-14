@@ -116,40 +116,39 @@ def questionnaire():
                                 ]
                             },
                             {
-                                "type": "checkbox",
+                                "type": "radiogroup",
                                 "name": "MT_06",
                                 "title": "I can play _ musical instruments",
                                 "choices": [
                                     {
-                                        "value": "item1",
+                                        "value": "0",
                                         "text": "0"
                                     },
                                     {
-                                        "value": "item2",
+                                        "value": "1",
                                         "text": "1"
                                     },
                                     {
-                                        "value": "item3",
+                                        "value": "2",
                                         "text": "2"
                                     },
                                     {
-                                        "value": "item4",
+                                        "value": "3",
                                         "text": "3"
                                     },
                                     {
-                                        "value": "item5",
+                                        "value": "4",
                                         "text": "4"
                                     },
                                     {
-                                        "value": "item6",
+                                        "value": "5",
                                         "text": "5"
                                     },
                                     {
-                                        "value": "item7",
+                                        "value": "6 or more",
                                         "text": "6 or more"
                                     }
                                 ],
-                                "maxSelectedChoices": 1
                             },
                             {
                                 "type": "radiogroup",
