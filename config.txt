@@ -2,3 +2,4 @@
 title = Musical scales
 contact_email_on_error = pmch2@cam.ac.uk
 organization_name = University of Cambridge
+recruiter = generic
