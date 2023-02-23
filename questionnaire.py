@@ -505,7 +505,7 @@ def questionnaire():
                 ]
             }
         ),
-        time_estimate=60 * 5,
+        time_estimate=60 * 2,
         save_answer="questionnaire",
         bot_response="not yet implemented",
     )
