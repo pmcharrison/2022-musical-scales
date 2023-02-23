@@ -6,11 +6,17 @@ description = This is a music listening experiment, but no musical expertise is 
 recruiter = prolific
 base_payment = 0
 prolific_estimated_completion_minutes = 1
-prolific_maximum_allowed_minutes = 30
 
 # 10 dollars an hour -> 16.666666667 cents per minutes
 prolific_reward_cents = 17
 
 auto_recruit = false
 
-# Set recruitment config manually in the Prolific dashboard to recruit only US and UK participants
+# Set recruitment config manually in the Prolific dashboard:
+# - USA, UK, Canada, Mexico
+# - no mobile or tablet
+# - yes audio
+
+# Because experiment max time was automatically set to 13 minutes,
+# we then increased estimated time to 3 minutes in Prolific,
+# and increased the base reward to 0.50.
