@@ -190,7 +190,6 @@ class ScalesTrialMaker(StaticTrialMaker):
 
 class Exp(psynet.experiment.Experiment):
     label = "Musical scales experiment"
-    initial_recruitment_size = 1
 
     variables = {
         "currency": "£",
