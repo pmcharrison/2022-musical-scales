@@ -41,7 +41,8 @@ RATING_ATTRIBUTES = [  # 14 in total
     "Spirituality, transcendence",
     "Admiration, awe",
     "Enjoyment, pleasure",
-    "Pride, confidence"
+    "Pride, confidence",
+    # "Boredom, indifference", # We omitted this from the first experiment by accident
 ]
 
 N_RATING_ATTRIBUTES_PER_TRIAL = 3
