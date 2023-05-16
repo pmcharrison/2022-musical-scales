@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+touch "${HOME}/.dallingerconfig"
+
 . docker/params
 
 if [[ ${PSYNET_DEVELOPER_MODE:-} == "1" ]]; then
@@ -13,22 +15,6 @@ fi
 
 ( docker stop dallinger > /dev/null && echo Stopped existing dallinger container && \
   docker rm dallinger ) 2>/dev/null || true
-
-
-# Removing this seems to be important for allowing Docker images to be built within Docker.
-# Otherwise the user doens't have Docker privileges.
-#-u $(id -u "${USER}"):$(id -g "${USER}") \
-#
-# Once this is removed, we needed to replace this:
-# -v "${HOME}/Library/Application Support/dallinger/":/.local/share/dallinger/ \
-#
-# with this:
-# -v "${HOME}/Library/Application Support/dallinger/":/root/.local/share/dallinger/ \
-#
-#
-# Note: SSH deployment currently only works on Mac.
-# To fix this we need to sort out the SSH mapped volume and the application data mapped volume.
-# Attempts already exist in docker/params but they need testing.
 
 docker run \
   --name dallinger \
@@ -56,7 +42,3 @@ docker run \
   --add-host=host.docker.internal:host-gateway \
   "${EXPERIMENT_IMAGE}" \
   "$@"
-
-# Note: the following
-# -v ~/.ssh:/root/.ssh \
-# only works for Mac.
