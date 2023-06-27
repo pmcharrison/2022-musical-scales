@@ -8,7 +8,7 @@ import psynet.experiment
 from psynet.js_synth import JSSynth, InstrumentTimbre, Note
 from psynet.modular_page import SurveyJSControl
 from psynet.page import InfoPage, SuccessfulEndPage, ModularPage
-from psynet.prescreen import HeadphoneTest
+from psynet.prescreen import AntiphaseHeadphoneTest
 from psynet.timeline import Timeline, Event
 from psynet.trial.static import StaticTrial, StaticNode, StaticTrialMaker
 from psynet.utils import get_logger, corr
@@ -192,13 +192,6 @@ class ScalesTrialMaker(StaticTrialMaker):
 class Exp(psynet.experiment.Experiment):
     label = "Musical scales experiment"
 
-    variables = {
-        "currency": "£",
-        "wage_per_hour": 10,
-        "window_width": 1024,
-        "window_height": 1024,
-    }
-
     timeline = Timeline(
         consent,
         InfoPage(
@@ -217,7 +210,7 @@ class Exp(psynet.experiment.Experiment):
             """,
             time_estimate=5,
         ),
-        HeadphoneTest(),
+        AntiphaseHeadphoneTest(),
         instructions(),
         ScalesTrialMaker(
             id_="main_experiment",

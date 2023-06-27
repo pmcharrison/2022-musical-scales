@@ -8,5 +8,5 @@
 # dallinger@git+https://github.com/Dallinger/Dallinger.git@print-dashboard-url#egg=dallinger
 
 # Example pinning a particular version of PsyNet
-psynet@git+https://gitlab.com/PsyNetDev/PsyNet.git@8f9eae6d1fe07eebd7c73cfaa068a9fd5afdd5fd#egg=psynet
-dallinger@git+https://github.com/Dallinger/Dallinger.git@1719e7c8a7710b4e7c7a00293a8bbac5d5b6bc1b#egg=dallinger
+psynet@git+https://gitlab.com/PsyNetDev/PsyNet.git@v10.0.0#egg=psynet
+dallinger@git+https://github.com/Dallinger/Dallinger.git#egg=dallinger

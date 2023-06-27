@@ -1,9 +1,13 @@
 [Config]
 title = Musical scales experiment (headphones required, Chrome browser, 15 minutes)
 description = This is a music listening experiment, but no musical expertise is required to take part. You will listen to different melodies, and you will be asked to rate them. We use a dynamic payment scheme which means you get paid in proportion to how far you make it through the experiment.
+window_width = 1024
+window_height = 1024
 
 [Prolific]
 recruiter = prolific
+currency = £
+wage_per_hour = 10.0
 base_payment = 0
 prolific_estimated_completion_minutes = 1
 
