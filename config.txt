@@ -8,11 +8,10 @@ window_height = 1024
 recruiter = prolific
 currency = £
 wage_per_hour = 10.0
-base_payment = 0
 prolific_estimated_completion_minutes = 1
 
 # 10 dollars an hour -> 16.666666667 cents per minutes
-prolific_reward_cents = 17
+base_payment = 0.17
 
 auto_recruit = false
 

@@ -1,1 +1,1 @@
-psynet@git+https://gitlab.com/PsyNetDev/PsyNet@v10.1.0#egg=psynet
+psynet==10.4.0
