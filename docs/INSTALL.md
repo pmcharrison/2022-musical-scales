@@ -1,8 +1,10 @@
 # Installation instructions
 
-Note: if you are planning to develop your own PsyNet experiments, we recommend exploring the 
-[PsyNet documentation website](https://psynet.dev) first and following the generic 
-installation instructions listed there.
+Note: the instructions below correspond to the 'Docker' installation method described in the
+[PsyNet documentation website](https://psynetdev.gitlab.io/PsyNet/index.html).
+This method involves the fewest steps, but has been associated with performance issues, especially
+on Apple Silicon devices. If you are planning to develop your own PsyNet experiments,
+you should consider following the 'virtual environment' installation method instead.
 
 ## Prerequisites
 
@@ -41,9 +43,9 @@ wsl --setdefault Ubuntu
 Restart your computer before continuing with the next steps.
 
 Note: If you see a message beginning "Hardware assisted virtualization and data execution protection must be enabled
-in the BIOS", you need to restart your computer into BIOS and change some settings to enable those two things. 
-The precise set of steps will depend on your computer. The first step though is to restart your computer, 
-and press a certain key to launch into BIOS – ordinarily that key will be printed on the screen at some point 
+in the BIOS", you need to restart your computer into BIOS and change some settings to enable those two things.
+The precise set of steps will depend on your computer. The first step though is to restart your computer,
+and press a certain key to launch into BIOS – ordinarily that key will be printed on the screen at some point
 during the startup sequence. Hint – you might find that the option you need to select is called 'SVM mode'...
 
 Once you’ve installed WSL, you probably will need to restart your computer before trying to relaunch Docker Desktop.
@@ -54,7 +56,7 @@ Download Docker Desktop from the [Docker website](https://docs.docker.com/get-do
 installation instructions. Installing Docker is typically trouble-free on MacOS and Linux but can be
 more complex on Windows. If you run into issues see the Troubleshooting section below.
 
-You may need to set some settings in Docker Desktop once it’s installed. Navigate to Docker Desktop settings, 
+You may need to set some settings in Docker Desktop once it’s installed. Navigate to Docker Desktop settings,
 then look for an ‘Advanced’ tab. If you don’t see such a tab, you can skip the following instructions.
 If you do see such a tab, do the following:
 
@@ -64,10 +66,15 @@ If you do see such a tab, do the following:
 
 3. Tick the box that says 'Allow privileged port mapping'.
 
+If you are on a Mac that uses Apple Silicon (i.e. most new Macs since 2021...?)
+then you should go to the General tab and tick the box that says
+'Use Rosetta for x86/amd64 emulation on Apple Silicon'.
+If you don't tick this box PsyNet will run very slowly.
+
 
 ### Installing PyCharm
 
-Writing code usually benefits from an integrated development environment (IDE). 
+Writing code usually benefits from an integrated development environment (IDE).
 We recommend using PyCharm for PsyNet experiments, specifically the Professional Edition.
 This is paid but academics can get an educational license for free.
 Download PyCharm from [this link](https://www.jetbrains.com/help/pycharm/installation-guide.html).
@@ -84,7 +91,7 @@ To do this, follow
      same page and repeat the process of setting the line seperator.
   5. Press OK.
 
-### Git 
+### Git
 
 If you want to develop your own experiment it's a good idea to use Git for version control.
 You can download Git [here](https://git-scm.com/downloads).
@@ -98,8 +105,8 @@ git config --global core.autocrlf false
 git config --global core.eol lf
 ```
 
-*Windows users only*: if you plan to use an SSH key to connect to your online Git hosting service, 
-and you want to use an SSH key with a password, then by default you will have to reenter your password 
+*Windows users only*: if you plan to use an SSH key to connect to your online Git hosting service,
+and you want to use an SSH key with a password, then by default you will have to reenter your password
 each time you restart WSL. If this sounds annoying, we recommend either creating your SSH key without a password,
 or following the instructions [here](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/working-with-ssh-key-passphrases?platform=windows)
 to have you password managed by `ssh-agent`.
@@ -107,7 +114,7 @@ to have you password managed by `ssh-agent`.
 
 ## Downloading the repository
 
-The easiest way to download the code is as a zip file. If you are viewing the repository 
+The easiest way to download the code is as a zip file. If you are viewing the repository
 online you should see a link to do this on the web page.
 
 If you want to work on the experiment yourself you should probably download it using Git.
@@ -165,18 +172,18 @@ If you see other error messages at this point, see Troubleshooting.
 
 Now you should configure PyCharm to use your experiment's Docker image.
 To do this, first open the Dockertag file in your experiment's directory, and copy the contents to your clipboard.
-Then look for a box in the bottom-right corner of your screen that says 'No interpreter'. 
-Click on this text and click 'Add New interpreter'. 
-Click 'Pull or use existing', then under 'Image tag' paste the contents of the Dockertag file you copied earlier. 
+Then look for a box in the bottom-right corner of your screen that says 'No interpreter'.
+Click on this text and click 'Add New interpreter'.
+Click 'Pull or use existing', then under 'Image tag' paste the contents of the Dockertag file you copied earlier.
 Click Next, and wait a while. The script will initially look for that tag on Dockerhub, which should fail;
 It should then look for that tag on your local computer, and successfully acquire the image you just built locally.
-Click Next, then select 'System Interpreter', then click 'Create'. You should have now successfully set up your 
-interpreter.  
+Click Next, then select 'System Interpreter', then click 'Create'. You should have now successfully set up your
+interpreter.
 
 
 ## Running the experiment
 
-If all has gone well, you should now be able to run the experiment. 
+If all has gone well, you should now be able to run the experiment.
 Try this by running the following command in your PyCharm terminal:
 
 ```shell
@@ -219,17 +226,17 @@ you may want to try rebooting your computer and trying again.
 If you see an error message like this when running a Docker command:
 
 ```
-: command not found 2: 
-: command not found 4: 
+: command not found 2:
+: command not found 4:
 : invalid option name: set: pipefail
 ```
 
 The problem is probably that your project has the wrong line endings;
 on Windows, if you are not configured correctly, then your files may end up
 with Windows-style line endings (CRLF) instead of Unix-style line endings (LF).
-To fix this, first follow the line-endings instructions described above for 
+To fix this, first follow the line-endings instructions described above for
 setting up Git and PyCharm in Windows.
-Then select your project folder in the project pane, 
+Then select your project folder in the project pane,
 and from the task bar select File | File Properties | Line Separators | LF - Unix and MacOS.
 Your command should now run without the error.
 

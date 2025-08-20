@@ -1,35 +1,37 @@
 # Running instructions
 
-To run a PsyNet command using the re
-Docker, you write commands of the following form:
+Note: the following instructions assume that you are using the 'Docker' method for running PsyNet.
+If you are instead using the 'virtual environment' method, please refer to the
+[PsyNet documentation website](https://psynetdev.gitlab.io/PsyNet/index.html) for instructions
+for how to run your experiment.
 
 ```shell
 # Debug the experiment locally
-bash docker/psynet debug local  
+bash docker/psynet debug local
 
 # Export data from a local experiment
-bash docker/psynet export local  
+bash docker/psynet export local
 
 # Run tests
 bash docker/run pytest test.py
 
 # Enter a bash terminal (e.g. for debugging)
-bash docker/run bash 
+bash docker/run bash
 
 # Enter a Python terminal (e.g. for debugging)
-bash docker/run python  
+bash docker/run python
 ```
 
 **Note**: before you run these commands you must have installed and launched
 Docker Desktop (see `INSTALL.md`).
 
-There are several commands like this that will soon be fully documented on PsyNet's 
+There are several commands like this that will soon be fully documented on PsyNet's
 [documentation website](https://psynetdev.gitlab.io/PsyNet).
 Please make sure you have followed the instructions in `INSTALL.md` before trying them.
 
 ## What happens when I run these commands?
 
-`bash docker/psynet` calls a shell script with the file path `docker/psynet`. 
+`bash docker/psynet` calls a shell script with the file path `docker/psynet`.
 This shell script does several things:
 
 1. It downloads any required Dallinger/PsyNet images from the internet.
@@ -42,12 +44,12 @@ This shell script does several things:
 6. It filters the console logs to replace certain Docker-specific file paths
    with their equivalents for your local file system. This means that error
    tracebacks will point to the source code that you can edit in your IDE,
-   and it means that data exports will link correctly to your computer's 
+   and it means that data exports will link correctly to your computer's
    export directory.
 
 `bash docker/run` is a more general command that allows you to run any command
 directly on the Docker container. For example, running `bash docker/run bash`
-allows you to enter an interactive terminal. Note that this command does 
+allows you to enter an interactive terminal. Note that this command does
 _not_ provide any console log filtering, because this could be quite confusing
 for debugging.
 
@@ -62,7 +64,7 @@ To set this up, follow these instructions:
 4. For port, enter a port of your choice, for example `12345`.
 
 Now start this debug server via your PyCharm interface (this typically involves clicking on a green bug icon).
-This should display some code that looks something like this: 
+This should display some code that looks something like this:
 
 ```python
 import pydevd_pycharm
@@ -78,18 +80,18 @@ and you can then explore the local state of the program.
 ### Running with local installations of PsyNet and Dallinger (MacOS/Linux only)
 
 This experiment makes heavy use of the Python packages PsyNet and Dallinger.
-If you want to debug either of these packages, it is useful to run your 
-experiment with local installations of them. The first step is to 
-download the source code for these packages and store in them in your 
+If you want to debug either of these packages, it is useful to run your
+experiment with local installations of them. The first step is to
+download the source code for these packages and store in them in your
 home directory under their default names as downloaded from source control
-(i.e. `~/PsyNet` and `~/Dallinger` respectively). Then you can run your 
-experiment as before, but writing `psynet-dev` instead of `psynet, 
+(i.e. `~/PsyNet` and `~/Dallinger` respectively). Then you can run your
+experiment as before, but writing `psynet-dev` instead of `psynet,
 for example:
 
 ```shell
-# Debug the experiment locally with developer installations of 
+# Debug the experiment locally with developer installations of
 # PsyNet and Dallinger.
-bash docker/psynet-dev debug local 
+bash docker/psynet-dev debug local
 ```
 
 You can change Python code in these packages, save it, then refresh
@@ -102,7 +104,7 @@ such as JavaScript or HTML).
 ### Running without bash
 
 It is possible to shorten the above command on MacOS and Linux if you first
-make the shell scripts in the `docker` folder executable. 
+make the shell scripts in the `docker` folder executable.
 You can do this by running the following command in your working directory:
 
 ```shell

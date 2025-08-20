@@ -177,7 +177,7 @@ class ScalesTrialMaker(StaticTrialMaker):
 
         return {"score": consistency, "passed": passed}
 
-    def compute_bonus(self, score, passed):
+    def compute_performance_reward(self, score, passed):
         max_bonus = 0.40
 
         if score is None or score <= 0.0:
