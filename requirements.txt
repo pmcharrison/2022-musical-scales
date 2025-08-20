@@ -1,1 +1,2 @@
 psynet==12.1.1
+dallinger==11.3.1
